@@ -4,7 +4,3 @@
 # Archivos fuente en alta resolución (demasiado grandes para GitHub, >100MB)
 # Generan las teselas; se pueden regenerar con scripts/
 assets/source/
-
-# about.html contiene fotos embebidas en base64 (docenas de MB)
-# Se regenera con: python3 scripts/build_about.py
-about.html
