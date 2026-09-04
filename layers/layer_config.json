@@ -1,0 +1,26 @@
+[
+  {
+    "id": "main",
+    "name": "Main",
+    "src": "layers/img_1.png",
+    "visible": true,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "id": "bottom",
+    "name": "Bottom",
+    "src": "layers/img_2.png",
+    "visible": true,
+    "x": 228,
+    "y": 8156
+  },
+  {
+    "id": "outside",
+    "name": "Outside",
+    "src": "layers/img_4.png",
+    "visible": true,
+    "x": 0,
+    "y": 0
+  }
+]

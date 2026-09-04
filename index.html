@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where do the ducks go...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        svg[aria-hidden] { position: absolute; width: 0; height: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <svg aria-hidden="true">
+        <filter id="noise-filter" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3"/>
+        </filter>
+    </svg>
+    <div id="app">
+        <div id="map-container"></div>
+        <div id="coord-readout" class="visible"></div>
+
+        <div id="sidebar">
+            <div id="minimap">
+                <canvas id="minimap-canvas"></canvas>
+                <div id="minimap-viewport"></div>
+            </div>
+
+            <div id="sidebar-controls">
+                <div class="sidebar-control-group">
+                    <button id="zoom-out" title="Zoom out (-)">−</button>
+                    <span id="zoom-level">100%</span>
+                    <button id="zoom-in" title="Zoom in (+)">+</button>
+                </div>
+                <div class="sidebar-control-group">
+                    <button id="fit-view" title="Overview">⛶</button>
+                    <button id="toggle-layers" title="Layers">Layers</button>
+                </div>
+            </div>
+
+            <div id="layer-panel" class="hidden">
+                <div id="layer-list"></div>
+            </div>
+
+            <div id="virtual-tour">
+                <h3>Chapters</h3>
+                <div class="tour-buttons">
+                    <button class="tour-stop" data-stop="0">0</button>
+                    <button class="tour-stop" data-stop="1-2">1+2</button>
+                    <button class="tour-stop" data-stop="3-4">3+4</button>
+                    <button class="tour-stop" data-stop="4-2">4.2</button>
+                    <button class="tour-stop" data-stop="5">5</button>
+                    <button class="tour-stop" data-stop="farewell">Farewell</button>
+                </div>
+            </div>
+
+            <div id="sidebar-bottom">
+                <a id="about-btn" href="about.html" title="Documentation">
+                    <span class="btn-emoji">📚</span>
+                </a>
+                <a id="web-btn" href="https://example.com/" target="_blank" rel="noopener noreferrer" title="Página web">
+                    <span class="btn-emoji">🌐</span>
+                </a>
+            </div>
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <span>Cargando mapa...</span>
+        </div>
+    </div>
+
+    <script src="js/mapViewer.js"></script>
+    <script src="js/minimap.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "layers": {
+    "1": {
+      "file": "layer_1.png",
+      "width": 14055,
+      "height": 8159
+    },
+    "2": {
+      "file": "layer_2.png",
+      "width": 14055,
+      "height": 236
+    },
+    "3": {
+      "file": "layer_3.png",
+      "width": 13977,
+      "height": 8385
+    },
+    "4": {
+      "file": "layer_4.png",
+      "width": 13976,
+      "height": 8385
+    },
+    "5": {
+      "file": "layer_5.png",
+      "width": 13304,
+      "height": 8385
+    },
+    "7": {
+      "file": "layer_7.png",
+      "width": 14054,
+      "height": 8385
+    }
+  },
+  "name_map": {
+    "4": "Base",
+    "2": "Banner",
+    "5": "Detail",
+    "7": "Outside"
+  }
+}
