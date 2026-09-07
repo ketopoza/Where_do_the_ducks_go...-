@@ -239,11 +239,12 @@ body.about-page {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 0;
     padding: 16px 8px;
     background: #ffffff;
     z-index: 90;
     box-shadow: -2px 0 12px rgba(0,0,0,0.1);
+    align-self: flex-start;
 }
 
 #sidebar-bottom {
@@ -252,8 +253,10 @@ body.about-page {
     align-items: center;
     gap: 4px;
     width: 116px;
-    margin-top: auto;
     padding-top: 12px;
+    padding-bottom: 12px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
 }
 
 #sidebar-bottom a {
@@ -301,6 +304,9 @@ body.about-page {
 /* Virtual Tour */
 #virtual-tour {
     width: 100%;
+    border-top: 1px solid #ccc;
+    padding-top: 12px;
+    padding-bottom: 24px;
 }
 
 #virtual-tour h3 {
@@ -370,6 +376,7 @@ body.about-page {
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    margin-bottom: 24px;
 }
 
 /* Coordinate readout (dev) */
