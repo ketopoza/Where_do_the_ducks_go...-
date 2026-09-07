@@ -258,7 +258,6 @@ body.about-page {
     padding-top: 12px;
     padding-bottom: 12px;
     border-top: 1px solid #ccc;
-    margin-top: auto;
 }
 
 #sidebar-bottom a {
@@ -308,7 +307,7 @@ body.about-page {
     width: 100%;
     border-top: 1px solid #ccc;
     padding-top: 12px;
-    padding-bottom: 24px;
+    padding-bottom: 12px;
 }
 
 #virtual-tour h3 {
