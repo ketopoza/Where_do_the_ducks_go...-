@@ -89,8 +89,6 @@ body.about-page {
     gap: 6px;
     width: 100%;
     margin-bottom: 24px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 12px;
 }
 
 .sidebar-control-group {
@@ -189,6 +187,7 @@ body.about-page {
     padding: 8px;
     width: 100%;
     border: 1px solid rgba(0, 0, 0, 0.642);
+    margin-bottom: 24px;
 }
 
 #layer-panel.hidden {
@@ -259,6 +258,7 @@ body.about-page {
     padding-top: 12px;
     padding-bottom: 12px;
     border-top: 1px solid #ccc;
+    margin-top: auto;
 }
 
 #sidebar-bottom a {
