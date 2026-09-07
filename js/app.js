@@ -165,48 +165,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ---- Coordinate readout + capture ----
-    const readoutEl = document.getElementById('coord-readout');
-    const toCoords = (px, py) => {
-        const rect = container.getBoundingClientRect();
-        return {
-            x: (-viewer.x + (px - rect.left)) / viewer.zoom,
-            y: (-viewer.y + (py - rect.top)) / viewer.zoom
-        };
-    };
-
-    container.addEventListener('mousemove', (e) => {
-        if (!viewer.ready || !readoutEl.classList.contains('visible')) return;
-        const c = toCoords(e.clientX, e.clientY);
-        const center = toCoords(rectCenter()[0], rectCenter()[1]);
-        readoutEl.textContent =
-            `map: ${c.x.toFixed(2)}, ${c.y.toFixed(2)}\n` +
-            `center: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}\n` +
-            `zoom: ${viewer.getZoomPercent()}%   [C] copy (30%)   [D] hide`;
-    });
-
-    function rectCenter() {
-        const r = container.getBoundingClientRect();
-        return [r.left + r.width / 2, r.top + r.height / 2];
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'd' || e.key === 'D') {
-            readoutEl.classList.toggle('visible');
-        } else if (e.key === 'c' || e.key === 'C') {
-            const r = container.getBoundingClientRect();
-            const cx = (-viewer.x + r.width / 2) / viewer.zoom;
-            const cy = (-viewer.y + r.height / 2) / viewer.zoom;
-            const snippet = `{ x: ${cx.toFixed(2)}, y: ${cy.toFixed(2)} }`;
-            console.log(`[tour] capture for zoom 30% -> ${snippet}`);
-            try {
-                navigator.clipboard.writeText(snippet);
-                console.log('[tour] copied to clipboard');
-            } catch (err) {
-                console.log('[tour] clipboard unavailable, copy manually');
-            }
-        }
-    });
-
     setTimeout(() => loadingEl.classList.add('hidden'), 3000);
 });
