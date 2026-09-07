@@ -373,7 +373,7 @@ body.about-page {
     width: 116px;
     height: 60px;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);

@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         readoutEl.textContent =
             `map: ${c.x.toFixed(2)}, ${c.y.toFixed(2)}\n` +
             `center: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}\n` +
-            `zoom: ${viewer.getZoomPercent()}%   [C] copiar (30%)   [D] ocultar`;
+            `zoom: ${viewer.getZoomPercent()}%   [C] copy (30%)   [D] hide`;
     });
 
     function rectCenter() {
@@ -198,12 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const cx = (-viewer.x + r.width / 2) / viewer.zoom;
             const cy = (-viewer.y + r.height / 2) / viewer.zoom;
             const snippet = `{ x: ${cx.toFixed(2)}, y: ${cy.toFixed(2)} }`;
-            console.log(`[tour] captura para zoom 30% -> ${snippet}`);
+            console.log(`[tour] capture for zoom 30% -> ${snippet}`);
             try {
                 navigator.clipboard.writeText(snippet);
-                console.log('[tour] copiado al portapapeles');
+                console.log('[tour] copied to clipboard');
             } catch (err) {
-                console.log('[tour] portapapeles no disponible, copia manualmente');
+                console.log('[tour] clipboard unavailable, copy manually');
             }
         }
     });

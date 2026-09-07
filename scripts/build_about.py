@@ -11,7 +11,7 @@ with open(md_path, 'r') as f:
     md = f.read()
 
 html = '''<!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,11 +24,11 @@ html = '''<!DOCTYPE html>
 <body class="about-page">
     <div class="page-wrap">
         <div id="about">
-            <a class="back-link" href="index.html">&larr; Volver al mapa</a>
+            <a class="back-link" href="index.html" title="Back to map">🦆</a>
             <div id="about-content"></div>
         </div>
-        <nav id="toc" aria-label="Tabla de contenidos">
-            <p id="toc-label">En esta pagina</p>
+        <nav id="toc" aria-label="Table of contents">
+            <p id="toc-label">index</p>
             <ul id="toc-list"></ul>
         </nav>
     </div>

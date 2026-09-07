@@ -135,3 +135,7 @@ The exhibition presentation includes the printed map, its folding system, and su
 <img src="pics/RG-Detail122.png" alt="Map layers" style="max-width: 100%; height: auto; display: block; margin: 1em auto;">
 
 ## VI_ Credits
+
+**Typography.** This webmap uses **Open Sans** (designed by Steve Matteson, licensed under the Apache License 2.0), a humanist sans-serif typeface chosen for its clarity and legibility across map interfaces.
+
+This project was carried out between **January and June 2026** as a Semesterproject for the **MA Visual Communication** programme at the **UdK Berlin** (Berlin University of the Arts), under the supervision of **Prof. David Skopec** and **Robin Coenen** at the Infoklasse.
