@@ -1,6 +1,8 @@
 # Where Do the Ducks Go When the Pond Freezes Over?
 Semester project of the Master in Visuelle Kommunikation at the Infoklasse. 
+
 UdK Berlin 2025/2026. 
+
 Enrique Poza Herranz
 
 ## I_ Introduction
