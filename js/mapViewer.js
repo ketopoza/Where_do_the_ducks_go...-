@@ -49,6 +49,18 @@ class MapViewer {
         this._flyToAnim = null;
         this.dragSamples = [];
 
+        // Cached viewport size. The container doesn't change size during map
+        // motion, so we read getBoundingClientRect() once and reuse it on the
+        // per-frame tour path instead of forcing a synchronous layout each rAF.
+        this._viewW = 0;
+        this._viewH = 0;
+
+        // Cache of fully decoded tile images keyed by absolute URL, populated
+        // by the tour preloader so renderTiles can reuse them with zero
+        // network/decode cost during playback. FIFO eviction caps memory.
+        this._decodedTiles = new Map();
+        this._decodedTileCap = 8000;
+
         this._debouncedUpdateUrl = debounce(() => this._updateUrl(), 400);
 
         this.init();
@@ -347,6 +359,25 @@ class MapViewer {
         this._debouncedUpdateUrl();
     }
 
+    // Lower zoom bound for tour moves: enough to fit BOTH map dimensions on
+    // screen (minZoom only fits the height, cropping the sides).
+    _tourZoomFloor() {
+        const { w: vw, h: vh } = this.viewportSize();
+        if (!this.naturalW || !this.naturalH) return this.minZoom;
+        return Math.min(this.minZoom, vw / this.naturalW, vh / this.naturalH);
+    }
+
+    setView(mapX, mapY, zoom) {
+        zoom = Math.max(this._tourZoomFloor(), Math.min(this.maxZoom, zoom));
+        const { w: vw, h: vh } = this.viewportSize();
+        this.zoom = zoom;
+        this.x = -(mapX * zoom - vw / 2);
+        this.y = -(mapY * zoom - vh / 2);
+        this.clampPosition();
+        this.applyTransform();
+        this.notifyZoomChange();
+    }
+
     getDisplayPhysicalSize() {
         const w = this.displayPhysicalW || (window.screen.width / 96) * 2.54;
         const h = this.displayPhysicalH || (window.screen.height / 96) * 2.54;
@@ -396,7 +427,7 @@ class MapViewer {
         const vh = rect.height || window.innerHeight;
 
         if (targetZoom != null && targetZoom !== this.zoom) {
-            this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, targetZoom));
+            this.zoom = Math.max(this._tourZoomFloor(), Math.min(this.maxZoom, targetZoom));
             this.notifyZoomChange();
         }
         const zoom = this.zoom;
@@ -569,27 +600,101 @@ class MapViewer {
         }
     }
 
-    getTileLevel() {
-        const level = Math.round(this.tileBaseLevel + Math.log2(this.zoom));
+    getTileLevel(zoom) {
+        const z = zoom || this.zoom;
+        const level = Math.round(this.tileBaseLevel + Math.log2(z));
         return Math.max(this.tileMinLevel, Math.min(this.tileMaxLevel, level));
+    }
+
+    // Returns the tile URLs needed to cover the viewport when the camera is
+    // centered at map coords (mapX, mapY) with the given zoom. Empty/missing
+    // tiles are skipped. For each tile it returns a list of candidate URLs
+    // (declared format first, alternate format second) so a prefetcher can
+    // warm whichever format actually exists on disk.
+    collectTileUrls(mapX, mapY, zoom, margin) {
+        if (!this.tileLayers.length || !zoom || !this.naturalW || !this.naturalH) return [];
+        const { w: vw, h: vh } = this.viewportSize();
+        if (!vw || !vh) return [];
+
+        const level = this.getTileLevel(zoom);
+        const tilePx = this.tileSize * Math.pow(2, this.tileBaseLevel - level);
+        const m = margin != null ? margin : this.tileMargin;
+
+        const minX = mapX - vw / (2 * zoom);
+        const minY = mapY - vh / (2 * zoom);
+        const maxX = mapX + vw / (2 * zoom);
+        const maxY = mapY + vh / (2 * zoom);
+
+        if (!this.tilesX.length) this._initTileCounts();
+        const tx1max = Math.max(0, this.tilesX[level] - 1);
+        const ty1max = Math.max(0, this.tilesY[level] - 1);
+
+        const tx0 = Math.max(0, Math.floor(minX / tilePx) - m);
+        const ty0 = Math.max(0, Math.floor(minY / tilePx) - m);
+        const tx1 = Math.min(tx1max, Math.ceil(maxX / tilePx) + m);
+        const ty1 = Math.min(ty1max, Math.ceil(maxY / tilePx) + m);
+
+        const urls = [];
+        for (const tl of this.tileLayers) {
+            if (tl.container.style.display === 'none') continue;
+            const base = tl.layer.tileSrc.replace(/\/+$/, '');
+            const primary = tl.layer.tileFormat || 'jpg';
+            const alternate = primary === 'png' ? 'jpg' : 'png';
+            for (let ty = ty0; ty <= ty1; ty++) {
+                for (let tx = tx0; tx <= tx1; tx++) {
+                    const stem = `${base}/${level}/${tx}_${ty}`;
+                    urls.push(stem + '.' + primary);
+                    urls.push(stem + '.' + alternate);
+                }
+            }
+        }
+        return urls;
+    }
+
+    // Store a fully-loaded (decoded) tile image so future renders can reuse
+    // it instantly. Evicts oldest entries once the cache exceeds the cap.
+    installDecodedTile(url, img) {
+        const key = this._tileCacheKey(url);
+        if (this._decodedTiles.has(key)) return;
+        this._decodedTiles.set(key, img);
+        if (this._decodedTiles.size > this._decodedTileCap) {
+            const oldestKey = this._decodedTiles.keys().next().value;
+            this._decodedTiles.delete(oldestKey);
+        }
+    }
+
+    // Normalizes tile URLs to a stable cache key (same origin + path) so keys
+    // always match regardless of whether they were written as absolute or
+    // relative URLs.
+    _tileCacheKey(url) {
+        try {
+            const u = new URL(url, this.container.baseURI || location.href);
+            return u.origin + u.pathname;
+        } catch (_) {
+            return String(url);
+        }
+    }
+
+    getDecodedTile(url) {
+        return this._decodedTiles.get(this._tileCacheKey(url)) || null;
+    }
+
+    _initTileCounts() {
+        for (let z = 0; z <= this.tileMaxLevel; z++) {
+            const s = Math.pow(2, z - this.tileBaseLevel);
+            const mapW = Math.max(1, Math.round(this.naturalW * s));
+            const mapH = Math.max(1, Math.round(this.naturalH * s));
+            this.tilesX[z] = Math.ceil(mapW / this.tileSize);
+            this.tilesY[z] = Math.ceil(mapH / this.tileSize);
+        }
     }
 
     updateTiles() {
         if (!this.tileLayers.length) return;
-        const rect = this.container.getBoundingClientRect();
-        const vw = rect.width || window.innerWidth;
-        const vh = rect.height || window.innerHeight;
+        const { w: vw, h: vh } = this.viewportSize();
         if (!vw || !vh || !this.zoom || !this.naturalW) return;
 
-        if (!this.tilesX.length) {
-            for (let z = 0; z <= this.tileMaxLevel; z++) {
-                const s = Math.pow(2, z - this.tileBaseLevel);
-                const mapW = Math.max(1, Math.round(this.naturalW * s));
-                const mapH = Math.max(1, Math.round(this.naturalH * s));
-                this.tilesX[z] = Math.ceil(mapW / this.tileSize);
-                this.tilesY[z] = Math.ceil(mapH / this.tileSize);
-            }
-        }
+        if (!this.tilesX.length) this._initTileCounts();
 
         const level = this.getTileLevel();
         const tilePx = this.tileSize * Math.pow(2, this.tileBaseLevel - level);
@@ -622,7 +727,7 @@ class MapViewer {
         const container = tl.container;
         const base = tl.layer.tileSrc.replace(/\/+$/, '');
         const prev = tl.tiles || new Map();
-        const pngTiles = tl.pngTiles || (tl.pngTiles = new Set());
+        const tileFormats = tl.tileFormats || (tl.tileFormats = new Map());
         const next = new Map();
         const levelChanged = tl.level != null && tl.level !== level;
 
@@ -634,23 +739,41 @@ class MapViewer {
                     next.set(k, old);
                     continue;
                 }
-                const img = document.createElement('img');
-                img.className = 'map-tile';
-                img.draggable = false;
+                const fmt = tileFormats.get(k) || tl.layer.tileFormat || 'jpg';
+                const altFmt = fmt === 'png' ? 'jpg' : 'png';
+                let img = this.getDecodedTile(`${base}/${level}/${tx}_${ty}.${fmt}`)
+                        || this.getDecodedTile(`${base}/${level}/${tx}_${ty}.${altFmt}`);
+                if (img) {
+                    // Preloaded + decoded tile: reuse as-is for instant paint.
+                    // Keep it in the cache too, so later revisits of the same
+                    // spot (tour hops back and forth) are instant as well.
+                    img.className = 'map-tile';
+                    img.draggable = false;
+                    img.dataset.format = img.src.split('.').pop();
+                    img.style.opacity = '1';
+                } else {
+                    img = document.createElement('img');
+                    img.className = 'map-tile';
+                    img.draggable = false;
+                    img.style.opacity = '0';
+                    img.addEventListener('load', () => {
+                        tileFormats.set(k, img.dataset.format);
+                        img.style.opacity = '1';
+                    });
+                    img.dataset.format = fmt;
+                    img.src = `${base}/${level}/${tx}_${ty}.${fmt}`;
+                    img.onerror = () => {
+                        if (img.dataset.retried) return;
+                        img.dataset.retried = 'true';
+                        img.dataset.format = img.dataset.format === 'png' ? 'jpg' : 'png';
+                        img.src = `${base}/${level}/${tx}_${ty}.${img.dataset.format}`;
+                    };
+                }
                 img.style.position = 'absolute';
                 img.style.left = (tx * tilePx) + 'px';
                 img.style.top = (ty * tilePx) + 'px';
                 img.style.width = tilePx + 'px';
                 img.style.height = tilePx + 'px';
-                img.style.opacity = '0';
-                img.addEventListener('load', () => { img.style.opacity = '1'; });
-                img.src = `${base}/${level}/${tx}_${ty}.${pngTiles.has(k) ? 'png' : 'jpg'}`;
-                img.onerror = () => {
-                    if (!img.src.endsWith('.png')) {
-                        pngTiles.add(k);
-                        img.src = `${base}/${level}/${tx}_${ty}.png`;
-                    }
-                };
                 container.appendChild(img);
                 next.set(k, img);
             }
@@ -678,10 +801,20 @@ class MapViewer {
         tl.tiles = next;
     }
 
+    // Cached viewport dimensions (container size never changes during tour
+    // playback, so avoid forcing a synchronous layout read on every rAF).
+    viewportSize() {
+        if (!this._viewW || !this._viewH) {
+            const rect = this.container.getBoundingClientRect();
+            this._viewW = rect.width || window.innerWidth;
+            this._viewH = rect.height || window.innerHeight;
+        }
+        return { w: this._viewW, h: this._viewH };
+    }
+
     clampPosition() {
-        const rect = this.container.getBoundingClientRect();
-        const vw = rect.width || window.innerWidth;
-        const vh = rect.height || window.innerHeight;
+        const vw = this.viewportSize().w;
+        const vh = this.viewportSize().h;
         const sw = this.naturalW * this.zoom;
         const sh = this.naturalH * this.zoom;
         const m = 20;
@@ -721,8 +854,9 @@ class MapViewer {
         this.stopInertia();
         this.cancelZoomAnim();
         this.cancelFlyTo();
-        const rect = this.container.getBoundingClientRect();
-        const vh = rect.height || window.innerHeight;
+        this._viewW = 0;
+        this._viewH = 0;
+        const { w: vw, h: vh } = this.viewportSize();
         if (this.naturalH) this.minZoom = vh / this.naturalH;
         if (this.physicalZoom) this.maxZoom = this.physicalZoom;
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom));
@@ -750,7 +884,7 @@ class MapViewer {
     }
 
     _updateUrl() {
-        if (!this.ready) return;
+        if (!this.ready || window.location.protocol === 'file:') return;
         const rect = this.container.getBoundingClientRect();
         const vw = rect.width || window.innerWidth;
         const vh = rect.height || window.innerHeight;

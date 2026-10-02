@@ -94,11 +94,12 @@ class Minimap {
         const r = this.mapDrawRect;
         const w = this.viewer.naturalW;
         const h = this.viewer.naturalH;
+        const vs = this.viewer.viewportSize();
         const info = {
             x: -this.viewer.x / this.viewer.zoom,
             y: -this.viewer.y / this.viewer.zoom,
-            width: (this.viewer.container.getBoundingClientRect().width || window.innerWidth) / this.viewer.zoom,
-            height: (this.viewer.container.getBoundingClientRect().height || window.innerHeight) / this.viewer.zoom
+            width: vs.w / this.viewer.zoom,
+            height: vs.h / this.viewer.zoom
         };
 
         const sx = r.w / w;
