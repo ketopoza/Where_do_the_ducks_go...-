@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'grid', name: 'Grid', tileSrc: 'tiles/grid', tileFormat: 'jpg', visible: true, imgW: 9370, imgH: 5590, locked: true },
         { id: 'margins', name: 'Margins', src: 'assets/margins.svg', visible: true, imgW: 9370, imgH: 5590, locked: true },
         { id: 'noise', name: 'Noise (multiply)', src: null, visible: true, blend: 'multiply', filterFilter: 'url(#noise-filter)', opacity: 0.15, locked: true },
-        { id: 'text', name: 'Text', src: 'assets/text.svg', visible: true, imgW: 9370, imgH: 5590 },
+        { id: 'text', name: 'Text', src: 'assets/text.svg?v=7', visible: true, imgW: 9370, imgH: 5590 },
         { id: 'pics', name: 'Photos', tileSrc: 'tiles/pics', tileFormat: 'png', visible: true, imgW: 9370, imgH: 5590 },
         { id: 'tracks', name: 'Tracks', src: 'assets/tracks.svg', visible: true, imgW: 9370, imgH: 5590 },
     ];
